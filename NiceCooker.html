@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+    <meta name="theme-color" content="#fff5e3" />
+    <title>中华美食大乱斗</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <div class="ambient ambient--one" aria-hidden="true"></div>
+      <div class="ambient ambient--two" aria-hidden="true"></div>
+
+      <header class="hero">
+        <img class="hero__title" src="./主标题.png" alt="中华美食大乱斗" />
+        <p class="hero__hint"><span></span>左右滑动，选出你的心头好<span></span></p>
+      </header>
+
+      <nav class="cuisine-tabs" aria-label="菜系选择">
+        <div class="cuisine-tabs__scroller" id="tabList" role="tablist"></div>
+      </nav>
+
+      <section class="carousel" aria-label="菜系卡片">
+        <div class="carousel__viewport" id="carouselViewport">
+          <div class="carousel__track" id="carouselTrack"></div>
+        </div>
+        <button class="carousel__arrow carousel__arrow--left" id="prevButton" type="button" aria-label="上一个菜系">
+          <span aria-hidden="true">‹</span>
+        </button>
+        <button class="carousel__arrow carousel__arrow--right" id="nextButton" type="button" aria-label="下一个菜系">
+          <span aria-hidden="true">›</span>
+        </button>
+      </section>
+
+      <footer class="selection">
+        <div class="selection__meta">
+          <span class="selection__eyebrow">当前选择</span>
+          <strong id="currentCuisine">川菜</strong>
+        </div>
+        <div class="selection__count"><b id="currentIndex">01</b><i></i><span>13</span></div>
+      </footer>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
