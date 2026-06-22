@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>灵感记录器</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, "Microsoft YaHei", sans-serif;
+      background: #f5f7fb;
+      color: #1f2937;
+    }
+
+    main {
+      max-width: 640px;
+      margin: 48px auto;
+      padding: 0 20px;
+    }
+
+    h1 {
+      margin: 0 0 24px;
+      font-size: 32px;
+      font-weight: 700;
+    }
+
+    .entry,
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .filters {
+      margin-bottom: 24px;
+    }
+
+    input,
+    select {
+      flex: 1;
+      min-width: 0;
+      padding: 12px 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 16px;
+      background: #fff;
+    }
+
+    select {
+      flex: 0 0 128px;
+    }
+
+    button {
+      padding: 12px 18px;
+      border: 0;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      background: #2563eb;
+      color: #fff;
+    }
+
+    ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 8px 0;
+      padding: 10px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      background: #fff;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+
+    li.favorite {
+      border-color: #f59e0b;
+      background: #fffbeb;
+    }
+
+    .time {
+      flex: 0 0 auto;
+      color: #64748b;
+      font-size: 14px;
+    }
+
+    .category {
+      flex: 0 0 auto;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #e2e8f0;
+      color: #334155;
+      font-size: 13px;
+    }
+
+    .idea-text {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .favorite-button {
+      flex: 0 0 auto;
+      padding: 6px 9px;
+      background: #e2e8f0;
+      color: #334155;
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    .favorite-button.active {
+      background: #f59e0b;
+      color: #fff;
+    }
+
+    .delete-button {
+      flex: 0 0 auto;
+      padding: 6px 10px;
+      background: #dc2626;
+      font-size: 14px;
+    }
+
+    .favorite-filter {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 4px;
+      font-size: 15px;
+      color: #334155;
+      white-space: nowrap;
+    }
+
+    .favorite-filter input {
+      flex: 0 0 auto;
+      width: 18px;
+      height: 18px;
+      padding: 0;
+    }
+
+    @media (max-width: 520px) {
+      main {
+        margin: 28px auto;
+      }
+
+      h1 {
+        font-size: 28px;
+      }
+
+      input,
+      select,
+      button {
+        width: 100%;
+      }
+
+      select {
+        flex-basis: 100%;
+      }
+
+      li {
+        align-items: flex-start;
+        flex-wrap: wrap;
+      }
+
+      .idea-text {
+        flex-basis: 100%;
+        order: 3;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>灵感记录器</h1>
+    <div class="entry">
+      <input id="ideaInput" type="text" placeholder="写下一个灵感">
+      <select id="categoryInput" aria-label="选择分类">
+        <option value="未分类">未分类</option>
+        <option value="MV创意">MV创意</option>
+        <option value="歌词">歌词</option>
+        <option value="分镜">分镜</option>
+        <option value="产品">产品</option>
+        <option value="其他">其他</option>
+      </select>
+      <button id="saveButton" type="button">保存</button>
+    </div>
+    <div class="filters">
+      <input id="searchInput" type="search" placeholder="搜索灵感">
+      <select id="categoryFilter" aria-label="按分类查看">
+        <option value="全部分类">全部分类</option>
+        <option value="未分类">未分类</option>
+        <option value="MV创意">MV创意</option>
+        <option value="歌词">歌词</option>
+        <option value="分镜">分镜</option>
+        <option value="产品">产品</option>
+        <option value="其他">其他</option>
+      </select>
+      <label class="favorite-filter">
+        <input id="favoriteFilter" type="checkbox">
+        只看收藏
+      </label>
+    </div>
+    <ul id="ideaList"></ul>
+  </main>
+
+  <script>
+    const input = document.getElementById("ideaInput");
+    const categoryInput = document.getElementById("categoryInput");
+    const button = document.getElementById("saveButton");
+    const searchInput = document.getElementById("searchInput");
+    const categoryFilter = document.getElementById("categoryFilter");
+    const favoriteFilter = document.getElementById("favoriteFilter");
+    const list = document.getElementById("ideaList");
+    const storageKey = "ideas";
+    const seedKey = "ideasSeeded300";
+    const defaultCategory = "未分类";
+    const categories = ["未分类", "MV创意", "歌词", "分镜", "产品", "其他"];
+
+    const loadIdeas = () => {
+      const savedIdeas = localStorage.getItem(storageKey);
+      const parsedIdeas = savedIdeas ? JSON.parse(savedIdeas) : [];
+
+      return parsedIdeas.map((idea) => ({
+        id: idea.id,
+        text: idea.text,
+        time: idea.time,
+        category: idea.category || defaultCategory,
+        favorite: Boolean(idea.favorite)
+      }));
+    };
+
+    const saveIdeas = (ideas) => {
+      localStorage.setItem(storageKey, JSON.stringify(ideas));
+    };
+
+    let ideas = loadIdeas();
+
+    const createId = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+    const persistIdeas = () => {
+      saveIdeas(ideas);
+    };
+
+    const seedTestIdeas = () => {
+      if (localStorage.getItem(seedKey)) {
+        return;
+      }
+
+      const subjects = ["雨夜", "海边", "电梯", "旧照片", "城市霓虹", "夏天午后", "未发送消息", "地铁末班车", "清晨窗台", "无人便利店"];
+      const actions = ["做成反转开场", "写成副歌意象", "拆成三段分镜", "设计成提醒功能", "变成短视频钩子", "加入留白镜头", "做成用户收藏入口", "尝试黑白画面", "改成独白旁白", "加入节奏停顿"];
+      const moods = ["温柔", "克制", "高能", "悬疑", "复古", "轻快", "孤独", "明亮", "梦境感", "纪实感"];
+      const seededIdeas = Array.from({ length: 300 }, (_, index) => {
+        const category = categories[Math.floor(Math.random() * categories.length)];
+        const subject = subjects[Math.floor(Math.random() * subjects.length)];
+        const action = actions[Math.floor(Math.random() * actions.length)];
+        const mood = moods[Math.floor(Math.random() * moods.length)];
+        const hour = String(Math.floor(Math.random() * 24)).padStart(2, "0");
+        const minute = String(Math.floor(Math.random() * 60)).padStart(2, "0");
+
+        return {
+          id: `seed-${Date.now()}-${index}`,
+          text: `测试灵感 ${index + 1}：${subject}${action}，整体保持${mood}。`,
+          time: `${hour}:${minute}`,
+          category,
+          favorite: Math.random() < 0.18
+        };
+      });
+
+      ideas = [...ideas, ...seededIdeas];
+      persistIdeas();
+      localStorage.setItem(seedKey, "true");
+    };
+
+    const renderIdea = (idea) => {
+      const item = document.createElement("li");
+      const time = document.createElement("span");
+      const category = document.createElement("span");
+      const ideaText = document.createElement("span");
+      const favoriteButton = document.createElement("button");
+      const deleteButton = document.createElement("button");
+
+      if (idea.favorite) {
+        item.className = "favorite";
+      }
+
+      time.className = "time";
+      time.textContent = idea.time;
+      category.className = "category";
+      category.textContent = idea.category;
+      ideaText.className = "idea-text";
+      ideaText.textContent = idea.text;
+      favoriteButton.className = idea.favorite ? "favorite-button active" : "favorite-button";
+      favoriteButton.type = "button";
+      favoriteButton.textContent = idea.favorite ? "★" : "☆";
+      favoriteButton.setAttribute("aria-label", idea.favorite ? "取消收藏" : "收藏");
+      favoriteButton.addEventListener("click", () => {
+        ideas = ideas.map((savedIdea) => {
+          if (savedIdea.id !== idea.id) {
+            return savedIdea;
+          }
+
+          return {
+            ...savedIdea,
+            favorite: !savedIdea.favorite
+          };
+        });
+        persistIdeas();
+        renderIdeas();
+      });
+      deleteButton.className = "delete-button";
+      deleteButton.type = "button";
+      deleteButton.textContent = "删除";
+      deleteButton.addEventListener("click", () => {
+        ideas = ideas.filter((savedIdea) => savedIdea.id !== idea.id);
+        persistIdeas();
+        renderIdeas();
+      });
+
+      item.appendChild(time);
+      item.appendChild(category);
+      item.appendChild(ideaText);
+      item.appendChild(favoriteButton);
+      item.appendChild(deleteButton);
+      list.appendChild(item);
+    };
+
+    const renderIdeas = () => {
+      const keyword = searchInput.value.trim().toLowerCase();
+      const selectedCategory = categoryFilter.value;
+      const onlyFavorites = favoriteFilter.checked;
+
+      list.innerHTML = "";
+      ideas
+        .filter((idea) => !keyword || idea.text.toLowerCase().includes(keyword))
+        .filter((idea) => selectedCategory === "全部分类" || idea.category === selectedCategory)
+        .filter((idea) => !onlyFavorites || idea.favorite)
+        .forEach(renderIdea);
+    };
+
+    button.addEventListener("click", () => {
+      const text = input.value.trim();
+
+      if (!text) {
+        return;
+      }
+
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, "0");
+      const minutes = String(now.getMinutes()).padStart(2, "0");
+      const idea = {
+        id: createId(),
+        text,
+        time: `${hours}:${minutes}`,
+        category: categoryInput.value || defaultCategory,
+        favorite: false
+      };
+
+      ideas = [...ideas, idea];
+      persistIdeas();
+      renderIdeas();
+      input.value = "";
+      input.focus();
+    });
+
+    searchInput.addEventListener("input", renderIdeas);
+    categoryFilter.addEventListener("change", renderIdeas);
+    favoriteFilter.addEventListener("change", renderIdeas);
+    seedTestIdeas();
+    renderIdeas();
+  </script>
+</body>
+</html>
